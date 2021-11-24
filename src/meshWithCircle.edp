@@ -1,0 +1,64 @@
+/* BORDERS ID */
+
+int leftWall = 1;
+int upperWall = 2;
+int rightWallUpVert = 3;
+int rightWallUpHoriz = 4;
+int rightWallLowHoriz = 5;
+int rightWallLowVert = 6;
+int lowerWall = 7;
+
+int[int] wall = [1, 2, 3, 4, 5, 6, 7];
+
+int window = 8;
+
+int leftHeat = 9;
+int topHeat = 10;
+int rightHeat = 11;
+int botHeat = 12;
+
+int[int] heater = [9, 10, 11, 12];
+
+/* LENGTHS */
+
+real length = 3.3;
+real width = 2.55;
+real winLength = 0.81;
+real winWidth = 0.1;
+
+real heatLength = 0.5;
+real heatWidth = 0.1;
+real heatPosX = 0.15;
+real heatPosY = 0.8;
+
+/* BORDERS DEFINITION : WALLS AND WINDOW */
+
+border C01(t=0, 1){x=0; y=t*width; label=leftWall;}
+border C02(t=0, 1){x=t*length; y=width; label=upperWall;}
+border C03(t=0, 1){x=length; y=width-(width-winLength)/2*t; label=rightWallUpVert;}
+border C04(t=0, 1){x=length-winWidth*t ; y=width-(width-winLength)/2; label=rightWallUpHoriz;}
+border C05(t=0, 1){x=length-winWidth ; y=width-(width-winLength)/2 - winLength*t; label=window;}
+border C06(t=0, 1){x=length-winWidth*(1-t) ; y=width-(width-winLength)/2-winLength; label=rightWallLowHoriz;}
+border C07(t=0, 1){x=length; y=width-(width-winLength)/2*(1+t)-winLength; label=rightWallLowVert;}
+border C08(t=0, 1){x=length*(1-t); y=0.; label=lowerWall;}
+
+/* BORDERS DEFINITION : HEATER */
+
+border C09(t=0, 1){x=heatPosX; y=heatPosY+t*heatLength; label=leftHeat;}
+border C10(t=0, 1){x=heatPosX+t*heatWidth; y=heatPosY+heatLength; label=topHeat;}
+border C11(t=0, 1){x=heatPosX+heatWidth; y=heatPosY+(1-t)*heatLength; label=rightHeat;}
+border C12(t=0, 1){x=heatPosX+heatWidth*(1-t); y=heatPosY; label=botHeat;}
+
+/* BORDERS DEFINITION : INNER CIRCLE */
+
+real x0 = length/2, y0 = length/2, radius = 0.2;
+
+border circle(t=0, 2*pi){x=x0+radius*cos(t); y=y0+radius*sin(t);}
+
+mesh Th = buildmesh(C01(-10) + C08(-15) + C07(-6) + C06(-4) + C05(-6) + C04(-4) + C03(-6) + C02(-15) + C09(8) + C10(3) + C11(8) + C12(3) + circle(10));
+
+// mesh Th = buildmesh(C01(-n) + C08(-n) + C07(-n) + C06(-n) + C05(-n) + C04(-n) + C03(-n) + C02(-n) + C09(n) + C10(n) + C11(n) + C12(n));
+
+savemesh(Th, "pieceMesh.msh"); //format database "bamg"
+ 
+plot(Th, wait=true);

@@ -1,0 +1,105 @@
+verbosity = 0;
+
+/* LOADING MESH */
+
+mesh Th("pieceMesh.msh");
+
+int[int] walls = [1, 2, 3, 4, 5, 6, 7];
+int window = 8;
+int[int] heater = [9, 10, 11, 12];
+
+/* DEFINITION PROBLEME DIFFUSION */
+ 
+fespace Vh(Th,P1);    // P1 FE space
+Vh uh, uoldh, vh;     // unkowns and test function. 
+Vh umin;              // unknown for dichotomy
+
+/* PHYSICS PARAMETERS */
+real k = 0.25;
+real Twin = -2.0;
+real Theat = 50.0;
+real qWall = -0.31;
+real Cp = 1000.0;
+real rho = 1.2;
+
+/* STARTING TIMES */
+real tmin = 24000.0, tmax = 26000.0;
+real tsol;
+
+/* NUMERICAL PARAMETERS */
+real t = 0.0;
+int nt = 200;
+real dt = tmin / nt;
+
+/* PLOTTING PARAMETERS */
+int ntPlot= 10; // plot every 10 frames
+
+func gWindow = Twin;   // Dirichlet on window
+func gHeater = Theat;   // Dirichlet on heater
+func gWall = qWall;    // Neuman on walls
+
+func uInit = Twin;
+ 
+problem laplaceBackwardEuler(uh, vh) =                    
+  int2d(Th)( k * (dx(uh)*dx(vh) + dy(uh)*dy(vh)) )
++ int2d(Th)( rho*Cp/dt * uh*vh ) 
+- int2d(Th)( rho*Cp/dt * uoldh*vh ) 
+- int1d(Th ,walls)( vh*gWall ) // Neuman
++ on(window, uh=gWindow)  // Dirichlet
++ on(heater, uh=gHeater); // Dirichlet
+
+uh = uInit;
+
+/* COMPUTING MEAN T IN INNNER CIRCLE */
+
+real L = 3.3;
+real x0 = L/2, y0 = L/2, radius = 0.2;
+
+fespace Ph(Th, P0);
+Ph reg = region; // label des éléments des régions
+int inside = reg(x0, y0);
+real circleArea = pi*radius^2;
+
+macro Tm(uh) (int2d(Th)((region==inside)*uh)/circleArea) //
+
+/* SEARCHING t SUCH Tm > Tf BY DICHOTOMY */
+real eps = 1e-5;
+real Tc = 19.0;
+
+/* COMPUTE TEMPERATURE AT tmin */
+
+for (int it(1); it < nt; it++)
+{
+  uoldh = uh;
+  laplaceBackwardEuler;
+}
+
+/* DICHOTOMY PART */
+
+int nt2 = 10;
+umin = uh;
+int dichotIt = 0;
+
+while ( abs(Tc-Tm(uh)) > eps )
+{
+
+  tsol = (tmax + tmin)/2;
+  dt = (tsol-tmin)/nt2;
+  uh = umin;
+  for (int it(1); it < nt2; it++) {
+    uoldh = uh;
+    laplaceBackwardEuler;
+  }
+
+  cout << "ITERATION " << dichotIt++ << " ,Tm = " << Tm(uh);
+  cout << " ,tmin = " << tmin << " ,tsol = " << tsol << endl;
+
+  if (Tm(uh) > Tc) { tmax = tsol; } 
+  else { 
+    tmin = tsol; 
+    umin = uh ;
+  }
+}
+
+cout << "Time at which Tm > Tc (+-"<<eps<<"): tsol = " << tsol << "s" << endl;
+
