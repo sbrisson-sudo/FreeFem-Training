@@ -80,6 +80,8 @@ int nt2 = 10;
 umin = uh;
 int dichotIt = 0;
 
+ofstream data("dichotLog.asc");
+
 while ( abs(Tc-Tm(uh)) > eps )
 {
 
@@ -93,6 +95,8 @@ while ( abs(Tc-Tm(uh)) > eps )
 
   cout << "ITERATION " << dichotIt++ << " ,Tm = " << Tm(uh);
   cout << " ,tmin = " << tmin << " ,tsol = " << tsol << endl;
+
+  data << dichotIt << "\t" << tsol << "\t" << Tm(uh) << endl; 
 
   if (Tm(uh) > Tc) { tmax = tsol; } 
   else { 

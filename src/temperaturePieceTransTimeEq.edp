@@ -8,6 +8,16 @@ int[int] walls = [1, 2, 3, 4, 5, 6, 7];
 int window = 8;
 int[int] heater = [9, 10, 11, 12];
 
+/* COMPUTING MEAN T IN INNNER CIRCLE */
+real L = 3.3;
+real x0 = L/2, y0 = L/2, radius = 0.2;
+
+fespace Ph(Th, P0);
+Ph reg = region; // label des éléments des régions
+int inside = reg(x0, y0);
+real circleArea = pi*radius^2;
+macro Tm(uh) (int2d(Th)((region==inside)*uh)/circleArea) //
+
 /* PHYSICS PARAMETERS */
 real k = 0.25;
 real Twin = -2.0;
@@ -23,62 +33,56 @@ func gWall = qWall;   // Neuman on walls
 
 /* DEFINITION PROBLEME DIFFUSION */
 fespace Vh(Th,P1);    // P1 FE space
-Vh uh, uoldh, vh;     // unkowns and test function. 
+Vh ueqh, uh, uoldh, vh;     // unkowns and test function. 
+
+/* RESOLUTION PROBLEME STATIQUE */
+
+problem laplaceStat(ueqh, vh) =                    
+  int2d(Th)( k* (dx(ueqh)*dx(vh) + dy(ueqh)*dy(vh)) )
+- int1d(Th,walls)( vh*gWall ) // Neuman
++ on(window, ueqh=gWindow)  // Dirichlet
++ on(heater, ueqh=gHeater); // Dirichlet
+
+laplaceStat;
 
 /* NUMERICAL PARAMETERS : TEMPORAL DISCRETIZATION */
 real t = 0.0;
 real dt = 200.0;
-int nt = 200;
 
 /* NUMERICAL PARAMETERS : EQUILIBRIUM DETECTION */
-real relTol = 1e-6;
-real relNorm = 1000000.0;
-
-/* PLOTTING PARAMETERS */
-int ntPlot= 10; // plot every 10 frames
+real relTol = 1e-10;
+real absTol = 1e-10;
 
 /* TEMPORAL INITIAL CONDITION */
 func uInit = Twin;
-uh = uInit;
- 
-/* DEFINING THE PROBLEM : WEAK FORMULATION AND DIRICHLET BCs */
-problem laplaceBackwardEuler(uh, vh) =                    
+
+problem laplaceBE(uh, vh) =    
+
   int2d(Th)( k * (dx(uh)*dx(vh) + dy(uh)*dy(vh)) )
+
 + int2d(Th)( rho*Cp/dt * uh*vh ) 
 - int2d(Th)( rho*Cp/dt * uoldh*vh ) 
+
 - int1d(Th ,walls)( vh*gWall ) // Neuman
 + on(window, uh=gWindow)  // Dirichlet
 + on(heater, uh=gHeater); // Dirichlet
 
-/* COMPUTING MEAN T IN INNNER CIRCLE */
-real L = 3.3;
-real x0 = L/2, y0 = L/2, radius = 0.2;
+uh = uInit;
 
-fespace Ph(Th, P0);
-Ph reg = region; // label des éléments des régions
-int inside = reg(x0, y0);
-real circleArea = pi*radius^2;
-macro Tm(uh) (int2d(Th)((region==inside)*uh)/circleArea) //
+/* SOLVING UNTIL WE REACH THE EQUILIBRIUM */
 
-/* SOLVING FOR EACH STEP */
+macro relNorm(uh) (sqrt(int2d(Th)( ((uh - uoldh)/uh)^2))) //
+macro absNorm(uh) (sqrt(int2d(Th)( (uh - ueqh)^2))) //
 
-// /* OVER A FINITE NUMBER OF STEPS */
-// for (int it(1); it < nt; it++)
-// {
-//   t += dt;
-//   uoldh = uh;
-//   laplaceBackwardEuler;
-// }
+ofstream norms("normsLog.asc");
 
-/* UNTIL WE REACH AN EQUILIBRIUM */
-relNorm = sqrt(int2d(Th)( ((uh - uoldh)/uh)^2));
-while (relNorm > relTol)
+while ((relNorm(uh) > relTol) && (absNorm(uh) > absTol))
 {
   t += dt;
   uoldh = uh;
-  laplaceBackwardEuler;
-  relNorm = sqrt(int2d(Th)( ((uh - uoldh)/uh)^2));
-  cout << "relative norm = " << relNorm << endl;
+  laplaceBE;
+
+  norms << t << "\t" << absNorm(uh) << "\t" << relNorm(uh) << endl;
 }
 
 cout << "Time to reach equilibrium : teq = " << t << "s" << endl;

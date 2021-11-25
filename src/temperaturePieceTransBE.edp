@@ -6,6 +6,18 @@ int[int] walls = [1, 2, 3, 4, 5, 6, 7];
 int window = 8;
 int[int] heater = [9, 10, 11, 12];
 
+/* COMPUTING MEAN T IN INNNER CIRCLE */
+
+real L = 3.3;
+real x0 = L/2, y0 = L/2, radius = 0.2;
+
+fespace Ph(Th, P0);
+Ph reg = region; // label des éléments des régions
+int inside = reg(x0, y0);
+real circleArea = pi*radius^2;
+
+macro Tm(uh) (int2d(Th)((region==inside)*uh)/circleArea) //
+
 /* PHYSICS PARAMETERS */
 
 real k = 0.25;
@@ -31,28 +43,16 @@ func gWindow = Twin;    // Dirichlet on window
 func gHeater = Theat;   // Dirichlet on heater
 func gWall = qWall;     // Neuman on walls
 
+/* FUNCTIONS SPACES AND FUNCTIONS DEFINITION */
+
+fespace Vh(Th,P1);      // P1 FE space
+Vh ueq, uh, uoldh, vh;       // unkowns and test function. 
+
+/* RESOLUTION PROBLEME DYNAMIQUE (Backward Euler) */
+
 func uInit = Twin;
 
-/* DEFINITION PROBLEME DIFFUSION */
- 
-fespace Vh(Th,P1);      // P1 FE space
-Vh uh, uoldh, vh;       // unkowns and test function. 
-
-/* COMPUTING MEAN T IN INNNER CIRCLE */
-
-real L = 3.3;
-real x0 = L/2, y0 = L/2, radius = 0.2;
-
-fespace Ph(Th, P0);
-Ph reg = region; // label des éléments des régions
-int inside = reg(x0, y0);
-real circleArea = pi*radius^2;
-
-macro Tm(uh) (int2d(Th)((region==inside)*uh)/circleArea) //
-
-/* DEFINING PROBLEM */
- 
-problem laplaceBackwardEuler(uh, vh) =    
+problem laplaceBE(uh, vh) =    
 
   int2d(Th)( k * (dx(uh)*dx(vh) + dy(uh)*dy(vh)) )
 
@@ -71,7 +71,7 @@ for (int it(1); it < nt; it++)
 {
   t += dt;
   uoldh = uh;
-  laplaceBackwardEuler;
+  laplaceBE;
 
   /* PLOTTING */
   if (it%ntPlot==0){plot(uh, value=true, fill=true, cmm="time = "+t+"s, Tm = "+Tm(uh)+"degC");}

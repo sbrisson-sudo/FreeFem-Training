@@ -1,3 +1,5 @@
+/* LOADING MESH */
+
 /* BORDERS ID */
 
 int leftWall = 1;
@@ -8,7 +10,7 @@ int rightWallLowHoriz = 5;
 int rightWallLowVert = 6;
 int lowerWall = 7;
 
-int[int] wall = [1, 2, 3, 4, 5, 6, 7];
+int[int] walls = [1, 2, 3, 4, 5, 6, 7];
 
 int window = 8;
 
@@ -52,15 +54,65 @@ border C12(t=0, 1){x=heatPosX+heatWidth*(1-t); y=heatPosY; label=botHeat;}
 /* BORDERS DEFINITION : INNER CIRCLE */
 
 real x0 = length/2, y0 = length/2, radius = 0.2;
+real circleArea = pi*radius^2;
 
 border circle(t=0, 2*pi){x=x0+radius*cos(t); y=y0+radius*sin(t);}
 
-int n = 15;
+macro buildMesh(n) ( buildmesh(C01(-n) + C08(-2*n) + C07(-int(n/2)) + C06(-int(n/2)) + C05(-int(n/2)) + C04(-int(n/2)) + C03(-int(n/2)) + C02(-2*n) + C09(n) + C10(int(n/2)) + C11(n) + C12(int(n/2)) + circle(n))) //
 
-mesh Th = buildmesh(C01(-n) + C08(-2*n) + C07(-int(n/2)) + C06(-int(n/4)) + C05(-int(n/2)) + C04(-int(n/4)) + C03(-int(n/2)) + C02(-2*n) + C09(n) + C10(int(n/5)) + C11(n/2) + C12(int(n/5)) + circle(n));
-
-// mesh Th = buildmesh(C01(-n) + C08(-n) + C07(-n) + C06(-n) + C05(-n) + C04(-n) + C03(-n) + C02(-n) + C09(n) + C10(n) + C11(n) + C12(n));
-
-savemesh(Th, "pieceMesh.msh"); //format database "bamg"
+/* DEFINITION PROBLEME DIFFUSION */
  
-plot(Th, wait=true, ps="../figures/meshWithCircle.eps");
+real k = 0.25;
+real Text = -2.0;
+real Theat = 50.0;
+real qWall = -0.31;
+
+real hHeat = 1.0;
+real hWall = 1.0;
+
+/* FIRST CONFIGURATION */
+
+func gWindow = Text;   // Dirichlet on window
+func gHeater = Theat;   // Dirichlet on heater
+func gWall = qWall/k;    // Neuman on walls
+
+/* MESHING */
+
+macro aNorm(Th, uh) (sqrt(int2d(Th)( (uh)^2))) //
+
+ofstream meshTestLog("meshTestLog.asc");
+
+mesh Th;
+
+verbosity = 0;
+
+for (int n(2); n<30; n+=1)
+{
+
+  cout << "Entering n = " << n << endl;
+
+  Th = buildMesh(n);
+
+  /* COMPUTING MEAN T IN INNNER CIRCLE */
+
+  fespace Ph(Th, P0);
+  Ph reg = region; // label des éléments des régions
+  int inside = reg(x0, y0);
+  macro Tm(Th, uh, region, inside) (int2d(Th)((region==inside)*uh)/circleArea) //
+
+  fespace Vh(Th,P1);     // P1 FE space
+  Vh uh,vh;              // unkown and test function. 
+
+  problem laplace(uh, vh) =                    
+    int2d(Th)( dx(uh)*dx(vh) + dy(uh)*dy(vh) )
+  - int1d(Th,walls)( vh*gWall ) // Neuman
+  + on(window, uh=gWindow)  // Dirichlet
+  + on(heater, uh=gHeater); // Dirichlet
+
+  /* SOLVING */
+
+  laplace;
+
+  meshTestLog << n << "\t" << aNorm(Th, uh) << endl;
+
+}

@@ -18,8 +18,8 @@ real rho = 1.2;
 /* NUMERICAL PARAMETERS */
 
 real t = 0.0;
-real dt = 10.0;
-int nt = 200;
+real dt = 100.0;
+int nt = 2000;
 
 /* PLOTTING PARAMETERS */
 
@@ -60,7 +60,7 @@ problem laplaceBackwardEuler(uh, vh) =
 + int2d(Th)( k/2 * (dx(uh)*dx(vh) + dy(uh)*dy(vh)))
 + int2d(Th)( k/2 * (dx(uoldh)*dx(vh) + dy(uoldh)*dy(vh)))
 
-- int1d(Th ,walls)( vh*gWall/k ) // Neuman
+- int1d(Th ,walls)( vh*gWall) // Neuman
 + on(window, uh=gWindow)  // Dirichlet
 + on(heater, uh=gHeater); // Dirichlet
 
@@ -68,14 +68,18 @@ uh = uInit;
 
 /* SOLVING FOR EACH STEP */
 
+ofstream TmLog("TmLog.asc");
+
 for (int it(1); it < nt; it++)
 {
   t += dt;
   uoldh = uh;
   laplaceBackwardEuler;
 
+  TmLog << t << "\t" << Tm(uh) << endl;
+
   /* PLOTTING */
-  if (it%ntPlot==0){plot(uh, value=true, fill=true, cmm="time = "+t+"s, Tm = "+Tm(uh)+"degC");}
+  //if (it%ntPlot==0){plot(uh, value=true, fill=true, cmm="time = "+t+"s, Tm = "+Tm(uh)+"degC");}
 }
 
 
