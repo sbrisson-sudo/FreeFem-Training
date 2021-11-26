@@ -47,10 +47,10 @@ laplaceStat;
 
 /* NUMERICAL PARAMETERS : TEMPORAL DISCRETIZATION */
 real t = 0.0;
-real dt = 200.0;
+real dt = 1000000000.0;
 
 /* NUMERICAL PARAMETERS : EQUILIBRIUM DETECTION */
-real relTol = 1e-10;
+real relTol = 1e-5;
 real absTol = 1e-10;
 
 /* TEMPORAL INITIAL CONDITION */

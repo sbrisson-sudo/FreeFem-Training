@@ -80,7 +80,7 @@ func gWall = qWall/k;    // Neuman on walls
 
 macro aNorm(Th, uh) (sqrt(int2d(Th)( (uh)^2))) //
 
-ofstream meshTestLog("meshTestLog.asc");
+ofstream meshTestLog("meshTestLogP2.asc");
 
 mesh Th;
 
@@ -100,7 +100,7 @@ for (int n(2); n<30; n+=1)
   int inside = reg(x0, y0);
   macro Tm(Th, uh, region, inside) (int2d(Th)((region==inside)*uh)/circleArea) //
 
-  fespace Vh(Th,P1);     // P1 FE space
+  fespace Vh(Th,P2);     // P1 FE space
   Vh uh,vh;              // unkown and test function. 
 
   problem laplace(uh, vh) =                    
@@ -113,6 +113,6 @@ for (int n(2); n<30; n+=1)
 
   laplace;
 
-  meshTestLog << n << "\t" << aNorm(Th, uh) << endl;
+  meshTestLog << n << "\t" << aNorm(Th, uh) << "\t" << Vh.ndof << endl;
 
 }

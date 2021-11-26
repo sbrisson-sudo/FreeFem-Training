@@ -1,5 +1,7 @@
 /* LOADING MESH */
 
+verbosity = 0;
+
 mesh Th("pieceMesh.msh");
 
 int[int] walls = [1, 2, 3, 4, 5, 6, 7];
@@ -11,7 +13,7 @@ int[int] heater = [9, 10, 11, 12];
 real k = 0.25;
 real Twin = -2.0;
 real Theat = 50.0;
-real qWall = -0.31;
+real qWall = 0.15; //-0.31
 real Cp = 1000.0;
 real rho = 1.2;
 
@@ -19,7 +21,7 @@ real rho = 1.2;
 
 real t = 0.0;
 real dt = 100.0;
-int nt = 2000;
+int nt = 1000;
 
 /* PLOTTING PARAMETERS */
 
@@ -68,7 +70,7 @@ uh = uInit;
 
 /* SOLVING FOR EACH STEP */
 
-ofstream TmLog("TmLog.asc");
+ofstream TmLog("TmLogq+015.asc");
 
 for (int it(1); it < nt; it++)
 {
@@ -82,5 +84,5 @@ for (int it(1); it < nt; it++)
   //if (it%ntPlot==0){plot(uh, value=true, fill=true, cmm="time = "+t+"s, Tm = "+Tm(uh)+"degC");}
 }
 
-
+//plot(uh, value=true, fill=true, cmm="time = "+t+"s, Tm = "+Tm(uh)+"degC");
 

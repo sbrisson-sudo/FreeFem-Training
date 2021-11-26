@@ -1,12 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib as mpl
+
+mpl.use("TkAgg")
 
 #--------------
 
 # fig, ax = plt.subplots()
 
+# dt = 1000000.0
+# ax.set_title(f"Evolution des normes absolues et relatives du champ\ndt = {dt}s")
+
 # data = np.loadtxt("normsLog.asc")
-# print(data[0,0])
+
 
 # ax.plot(data[:,0], data[:,1],"+-",lw=0.1, color="tab:green", zorder=5)
 # ax.set_ylabel("Absolute norm $T_n-T_{eq}$", color="tab:green")
@@ -42,27 +48,68 @@ import matplotlib.pyplot as plt
 
 #--------------
 
-# data = np.loadtxt("meshTestLog.asc")
+datafiles = [
+    "meshTestLogP1.asc",
+    "meshTestLogP2.asc"
+    ]
 
-# fig, ax = plt.subplots()
+labels = ["P1", "P2"]
 
-# ax.plot(data[:,0],data[:,1], "-+", lw=0.5)
-# ax.set_xlabel("Finesse du maillage")
-# ax.set_ylabel("Norme L2 du champ de température T")
-
-#--------------
-
-data = np.loadtxt("TmLog.asc")
 
 fig, ax = plt.subplots()
 
-ax.plot(data[:1000,0],data[:1000,1])
-ax.set_xlabel("Temps (s)")
-ax.set_ylabel("Température moyenne au sein du cercle")
+for p, file in zip(labels, datafiles):
+    
+    data = np.loadtxt(file)
+    #ax.plot(data[:,0],data[:,1], "-+", lw=0.5, label=p)
+    ax.plot(data[:,0],data[:,2], "-+", lw=0.5, label=p)
+ax.set_xlabel("Finesse du maillage")
 
-ax.hlines(19.0, data[0,0], data[1000,0], color="k", linestyle=":", label="Température critique $T_c$")
+# ax.set_ylabel("Norme L2 du champ de température T")
+ax.set_ylabel("Nombre de degrés de liberté")
 
-ax.legend()
+#--------------
 
-plt.draw()
+# fig, ax = plt.subplots()
+
+
+# datafiles = [
+#     "TmLog.asc",
+#     "TmLogk1.asc",
+#     "TmLogk005.asc",
+#     "TmLogk015.asc"
+#     ]
+# k = [0.25, 1.0, 0.05, 0.15]
+
+
+# for k,file in zip(k,datafiles):
+
+#     data = np.loadtxt(file)
+#     ax.plot(data[:,0],data[:,1], label=f"k = {k}W/m/K")
+
+# # datafiles = [
+# #     "TmLog.asc",
+# #     "TmLogq1.asc",
+# #     "TmLogq015.asc",
+# #     "TmLogq+015.asc",
+# #     ]
+# # q = [-0.31, -1.0, -0.15, 0.15]
+
+
+# # for q,file in zip(q,datafiles):
+
+# #     data = np.loadtxt(file)
+# #     ax.plot(data[:,0],data[:,1], label=f"q = {q}W/m2")
+
+
+
+# ax.set_xlabel("Temps (s)")
+# ax.set_ylabel("Température moyenne au sein du cercle")
+
+# ax.hlines(19.0, data[0,0], data[-1,0], color="k", linestyle=":", label="Température critique $T_c$")
+
+# ax.legend()
+
+#--------------
+
 plt.plot()

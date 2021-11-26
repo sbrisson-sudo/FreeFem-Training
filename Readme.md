@@ -33,3 +33,5 @@ Les scripts suivants ont été réalisés:
 - `temperaturePieceTransTimeEq.edp` : calcule le temps pour atteindre l'équilibre (selon une tolérance sur la norme relative)
 - `temperaturePieceDichot.edp` : calcule le temps pour atteindre une certaine température au centre de la pièce, par dichotomie.
 - `temperaturePieceTransCN.edp` Avec Cranck-Nicolson
+
+En plus de cela les fichiers `.asc`, sorties de FreeFem++, servent d'entrée au script de plot `plotNorms.py`.
